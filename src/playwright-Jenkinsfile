@@ -18,7 +18,7 @@ spec:
     }
   }
   stages {
-    stage('Run maven') {
+    stage('Build') {
       steps {
         container('jnpl') {
           git credentialsId: 'test', url: 'git@github.com:Teamwork/qa-playwright-frontend-tests.git'
@@ -26,12 +26,18 @@ spec:
         container('playwright') {
           sh 'npm install'
         }
+      }
+    }
+    stage('Projects') {
+      steps {
         container('playwright') {
           sh 'npm run projects'
-        }
+      }
+    }
+    stage('Desk') {
+      steps {
         container('playwright') {
           sh 'npm run desk'
-        }
       }
     }
   }
