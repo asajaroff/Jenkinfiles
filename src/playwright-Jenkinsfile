@@ -1,17 +1,40 @@
-podTemplate(containers: [containerTemplate(name: 'playwright', image: 'mcr.microsoft.com/playwright:focal', ttyEnabled: true, command: 'cat')])
-{
-    node(POD_LABEL) {
-        stage('Code Checkout') {
-            git credentialsId: 'test', url: 'git@github.com:Teamwork/qa-playwright-frontend-tests.git'
-
-        container('playright') {
-                stage('Chromium Projects critical') {
-                    steps {
-                        sh 'npm install'
-                        sh 'npm run test'
-                    }
-                }
-            }
-        }
+pipeline {
+  agent {
+    kubernetes {
+      yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    some-label: some-label-value
+spec:
+  containers:
+  - name: playwright
+    image: mcr.microsoft.com/playwright:focal
+    command:
+    - cat
+    tty: true
+  - name: busybox
+    image: busybox
+    command:
+    - cat
+    tty: true
+"""
     }
+  }
+  stages {
+    stage('Run maven') {
+      steps {
+        container('playwright') {
+          git credentialsId: 'test', url: 'git@github.com:Teamwork/qa-playwright-frontend-tests.git'
+        }
+        container('busybox') {
+          sh 'ls -la'
+        }
+        container('playwright') {
+          sh 'npm install'
+        }
+      }
+    }
+  }
 }
