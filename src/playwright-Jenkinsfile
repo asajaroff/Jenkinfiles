@@ -32,12 +32,14 @@ spec:
       steps {
         container('playwright') {
           sh 'npm run projects'
+        }
       }
     }
     stage('Desk') {
       steps {
         container('playwright') {
           sh 'npm run desk'
+        }
       }
     }
   }
