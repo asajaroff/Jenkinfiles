@@ -14,11 +14,6 @@ spec:
     command:
     - cat
     tty: true
-  - name: busybox
-    image: busybox
-    command:
-    - cat
-    tty: true
 """
     }
   }
@@ -26,13 +21,13 @@ spec:
     stage('Run maven') {
       steps {
         container('playwright') {
-          git credentialsId: 'test', url: 'git@github.com:Teamwork/qa-playwright-frontend-tests.git'
-        }
-        container('busybox') {
-          sh 'ls -la'
+          sh 'npm install'
         }
         container('playwright') {
-          sh 'npm install'
+          sh 'npm run projects'
+        }
+        container('playwright') {
+          sh 'npm run desk'
         }
       }
     }
