@@ -28,14 +28,14 @@ spec:
         }
       }
     }
-    stage('Projects') {
+    stage('Projects tests') {
       steps {
         container('playwright') {
           sh 'npm run projects'
         }
       }
     }
-    stage('Desk') {
+    stage('Desk tests') {
       steps {
         container('playwright') {
           sh 'npm run desk'
