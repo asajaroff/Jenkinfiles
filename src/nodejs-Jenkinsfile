@@ -1,0 +1,26 @@
+podTemplate(containers: [
+    containerTemplate(name: 'nodejs', image: 'node:15.6.0-stretch-slim', ttyEnabled: true, command: 'cat'),
+    containerTemplate(name: 'go', image: 'golang:1.14-stretch', ttyEnabled: true, command: 'cat')])
+{
+    node(POD_LABEL) {
+        stage('Code Checkout') {
+            git branch: 'master',
+                url: 'https://github.com/expressjs/express.git'
+
+        container('nodejs') {
+            stage('Build Depedencies') {
+                    sh 'npm install'
+                }
+            stage('Lint') {
+                sh 'npm run lint'
+                }
+            stage('Code Coverage') {
+                sh 'npm run test-cov'
+            }
+            stage('Tests') {
+                sh 'npm run test'
+            }
+            }
+        }
+    }
+}

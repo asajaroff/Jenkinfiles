@@ -1,0 +1,29 @@
+podTemplate(containers: [
+    containerTemplate(name: 'nodejs', image: 'node:10-buster', ttyEnabled: true, command: 'cat')
+  ]) {
+  parameters {
+	    choice(name: 'BROWSER', choices: ['chromium', 'firefox', 'webkit'])
+	    choice(name: 'TEST', choices: ['test/critical-projects-tests/', 'test/critical-desk-tests/', 'test/projects-tests/'])
+    }
+    environment {
+        FOLIO_JUNIT_OUTPUT_NAME='junit.xml'
+    }
+
+    node(POD_LABEL) {
+        stage('Code Checkout') {
+            git credentialsId: 'test', url: 'git@github.com:Teamwork/qa-playwright-frontend-tests.git'
+
+        container('nodejs') {
+            stage('Build Depedencies') {
+                    sh 'npm install'
+                    sh 'npm i -D playwright'
+                    sh 'apt update && apt upgrade -y'
+                    sh 'apt install -y chromium chromium-l10n'
+                }
+                stage('Test') {
+                    sh 'npx folio test/critical-projects-tests/ --timeout=0 --param browserName=chromium screenshotOnFailure --reporter=junit'
+                }
+            }
+        }
+    }
+}
