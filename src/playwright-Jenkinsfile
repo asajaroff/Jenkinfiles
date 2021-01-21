@@ -26,6 +26,7 @@ spec:
         }
         container('playwright') {
           sh 'npm install'
+          sh 'echo $FOLIO_JUNIT_OUTPUT_NAME'
         }
       }
     }
