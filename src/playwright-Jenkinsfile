@@ -26,7 +26,6 @@ spec:
         }
         container('playwright') {
           sh 'npm install'
-          sh 'echo $FOLIO_JUNIT_OUTPUT_NAME'
         }
       }
     }
@@ -35,14 +34,25 @@ spec:
         container('playwright') {
           sh 'npm run projects'
         }
+        container('jnpl') {
+          junit allowEmptyResults: true, testResults: 'junit.xml'
+        }
       }
     }
     stage('Desk tests') {
       steps {
         container('playwright') {
-          sh 'npm run desk'
+            sh 'npm run desk'
+            }
+          }
         }
       }
+  post {
+    always {
+      junit allowEmptyResults: true, testResults: 'junit.xml'
+    }
+    failure {
+      archiveArtifacts 'test-results/*'
     }
   }
 }
