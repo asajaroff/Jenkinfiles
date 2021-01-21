@@ -12,6 +12,9 @@ spec:
     command:
     - cat
     tty: true
+    env:
+    - name: FOLIO_JUNIT_OUTPUT_NAME
+      value: junit.xml
 """
     }
   }
