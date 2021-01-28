@@ -1,6 +1,6 @@
 FROM debian:stretch-slim
 
-ENV KOPS_VERSION=v1.18.2
+ENV KOPS_VERSION=v1.17.2
 ENV KUBECTL_VERSION=v1.20.1
 
 RUN apt update && apt upgrade -y \
