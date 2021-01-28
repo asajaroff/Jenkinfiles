@@ -1,0 +1,56 @@
+pipeline {
+  agent {
+    kubernetes {
+      yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+spec:
+  containers:
+  - name: kops
+    image: asajaroff/k8s-utils:v0.1
+    command:
+    - cat
+    tty: true
+"""
+    }
+  }
+  stages {
+    stage('List clusters') {
+      steps {
+        container('kops') {
+          sh 'kops version'
+          withCredentials([usernamePassword(credentialsId: 'kops-staging', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+            sh 'kops get --state s3://teamwork-staging-kubernetes --name miller.k8s.local'
+          }
+        }
+      }
+    }
+    stage('Check for updates'){
+      steps{
+        container('kops'){
+          withCredentials([usernamePassword(credentialsId: 'kops-staging', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+            sh 'kops update cluster --name miller.k8s.local --state s3://teamwork-staging-kubernetes'
+          }
+        }
+      }
+    }
+    stage('Example') {
+      input {
+        message "Should we continue?"
+          ok "Yes, we should."
+          submitter "alice,bob"
+          parameters {
+            string(name: 'PERSON', defaultValue: 'SysOps person', description: 'Confirm this update?')
+            }
+      }
+      steps {
+        container('kops'){
+          withCredentials([usernamePassword(credentialsId: 'kops-staging', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+            sh 'kops update cluster --name miller.k8s.local --state s3://teamwork-staging-kubernetes --yes'
+          }
+        }
+      }
+    }
+  }
+}
