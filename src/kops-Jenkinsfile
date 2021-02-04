@@ -1,0 +1,61 @@
+pipeline {
+  agent {
+    kubernetes {
+      yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+spec:
+  containers:
+  - name: kops
+    image: asajaroff/k8s-utils:kops-1.17
+    command:
+    - cat
+    tty: true
+"""
+    }
+  }
+
+  environment {
+    AWS_ACCESS_KEY_ID = credentials('jenkins-aws-secret-key-id')
+    AWS_SECRET_ACCESS_KEY = credentials('jenkins-aws-secret-access-key')
+    KOPS_STATE_STORE = credentials('kops-state-store')
+  }
+
+  parameters {
+    string(name: 'KOPS_CLUSTER', defaultValue: 'miller.k8s.local', description: 'Target cluster to operate on')
+  }
+
+  stages {
+    stage('Diffs') {
+      steps {
+        container('kops'){
+          sh 'kops version'
+          sh "kops update cluster --name ${params.KOPS_CLUSTER} -v 5"
+          sh "kops upgrade cluster --name ${params.KOPS_CLUSTER} -v 5"
+        }
+      }
+    }
+
+    stage('Confirm & Upgrade') {
+      input {
+          message "Should we continue?"
+          ok "Yes"
+        }
+      steps {
+        container('kops'){
+          sh "kops upgrade cluster --name ${params.KOPS_CLUSTER} --yes"
+          sh "kops update cluster --name ${params.KOPS_CLUSTER} --yes"
+          }
+      }
+    }
+
+    stage('Rolling release') {
+      steps {
+        container('kops'){
+          sh "kops rolling-update cluster --name ${params.KOPS_CLUSTER} --validation-timeout 30m --yes"
+          }
+        }
+      }
+    }
+  }
